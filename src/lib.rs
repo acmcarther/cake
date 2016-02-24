@@ -5,6 +5,8 @@ pub trait A {
     1
   }
 
+  fn a_must_implement(&mut self) -> u32;
+
   fn a_req_b_and_c(&mut self) -> u32 {
     self.a_work() + self.as_b().b_work() + self.as_c().c_work()
   }
@@ -43,6 +45,11 @@ pub trait C {
   fn as_a(&mut self) -> &mut Self::T;
 }
 
+macro_rules! selftype {
+  ( $($fn_name:ident),+ ) => {
+    $(fn $fn_name(&mut self) -> &mut Self { self })+
+  }
+}
 
 #[cfg(test)]
 mod test {
@@ -52,18 +59,21 @@ mod test {
 
   impl A for Abc {
     type T = Abc;
-    fn as_b(&mut self) -> &mut Abc { self }
-    fn as_c(&mut self) -> &mut Abc { self }
+    selftype! { as_b, as_c }
+
+    fn a_must_implement(&mut self) -> u32 {
+      1
+    }
   }
 
   impl B for Abc {
     type T = Abc;
-    fn as_a(&mut self) -> &mut Abc { self }
+    selftype! { as_a }
   }
 
   impl C for Abc {
     type T = Abc;
-    fn as_a(&mut self) -> &mut Abc { self }
+    selftype! { as_a }
   }
 
   #[test]
